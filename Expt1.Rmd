@@ -1,0 +1,331 @@
+---
+title: "Image Processing from MCC Experiment"
+author: "Hunter Ratliff, @HunterRatliff1"
+date: "February 28, 2016"
+output: 
+  html_document:
+    css: Styles.css
+    theme: united
+    toc: true
+---    
+
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, 
+                      fig.path='Figures-Ex1/', fig.align='center')
+
+require(EBImage)
+require(dplyr)
+require(gridExtra)
+require(scales)
+require(ggplot2)
+require(ggthemes)
+
+getImg.merge <- function(img_name="", t1, t2){
+  ## # # # # # # # # # # # # # # ##
+  ##        Load the image       ##
+  ## # # # # # # # # # # # # # # ##
+  Img <- readImage(paste0("Images/Ex1/", img_name))
+  
+  # Render image of the whole embryo size
+  Img.full <- (Img > t1) %>% channel("gray") %>% bwlabel()
+  
+  # Render image of the cilia sites
+  Img.cil  <- (Img > t2) %>% channel("gray") %>% bwlabel()
+  
+  ## # # # # # # # # # # # # # # ##
+  ## Merge into a compound image ##
+  ## # # # # # # # # # # # # # # ##
+  Img_merge <- rgbImage(green=Img.cil, red=Img.full) %>%
+    thresh(w=10, h=10, offset=0.08) %>%
+    opening(makeBrush(5, shape='disc')) %>%
+    fillHull() 
+  
+  # Display merged image
+  Img_merge %>% display(method="raster") 
+  
+  return(list(Img.full, Img.cil))
+}
+```
+
+# Untreated
+
+## Control - Time 1
+
+```{r Con1A_image}
+Con1A <- getImg.merge(img_name="C1-A.png", 0.033, 0.400)
+
+Body <- computeFeatures.shape(Con1A[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Cil <- computeFeatures.shape(Con1A[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+
+---------------------------
+
+```{r Con1B_image}
+Con1B <- getImg.merge(img_name="C1-B.png", 0.02, 0.2)
+
+Body <- computeFeatures.shape(Con1B[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Con1B[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+
+
+---------------------------
+
+```{r Con1C_image}
+Con1C <- getImg.merge(img_name="C1-C.png", 0.01, 0.2)
+
+Body <- computeFeatures.shape(Con1C[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Con1C[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+## Control - Time 2
+
+```{r Con2_image}
+Con2 <- getImg.merge(img_name="C2.png", 0.01, 0.2)
+
+Body <- computeFeatures.shape(Con2[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Con2[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+
+
+
+# Cyclopamine
+
+## Inhibitor - Time 1
+
+```{r Cyc1A_image}
+Cyc1A <- getImg.merge(img_name="I1-A.png", 0.015, 0.250)
+
+Body <- computeFeatures.shape(Cyc1A[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Cyc1A[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+---------------------------
+
+```{r Cyc1B_image}
+Cyc1B <- getImg.merge(img_name="I1-B.png", 0.02, 0.25)
+
+Body <- computeFeatures.shape(Cyc1B[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Cyc1B[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+
+## Inhibitor - Time 2
+
+```{r Cyc2A_image}
+Cyc2A <- getImg.merge(img_name="I2-A.png", 0.02, 0.33)
+
+Body <- computeFeatures.shape(Cyc2A[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Cyc2A[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+---------------------------
+
+```{r Cyc2B_image}
+Cyc2B <- getImg.merge(img_name="I2-B.png", 0.07, 0.6)
+
+Body <- computeFeatures.shape(Cyc2B[[1]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+Cil <- computeFeatures.shape(Cyc2B[[2]]) %>%
+  as.data.frame() %>%
+  tbl_df() %>%
+  arrange(desc(s.area))
+
+Body %>% top_n(5, s.area) # Print 5 largest features (i.e. the body)
+```
+
+`r percent(sum(Cil$s.area) / max(Body$s.area))` of the cell body contains cilia (cell area = 
+`r round(max(Body$s.area)*(0.5/840)^2, digits = 3)` mm). Additionally, there are 
+`r comma(nrow(filter(Cil, s.area>10)))` distinguishable cilia objects. <br><br>
+
+# Linear Models
+
+```{r define data frame}
+df <- data_frame(
+  Tx      = c("No Treatment", "No Treatment", "No Treatment", "No Treatment", 
+              "Cyclopamine", "Cyclopamine", "Cyclopamine"), 
+  Time    = c(29, 29, 29, 23, 29, 23, 23), 
+  Percent = c(0.208, 0.240, 0.198, 0.230, 0.337, 0.271, 0.309), 
+  Num     = c(902, 686, 931, 589, 473, 520, 501), 
+  Area    = c(0.630, 0.621, 0.690, 0.459, 0.616, 0.552, 0.447))
+```
+
+## Percent Ciliated ~ Treatment + Time Treated
+
+```{r lm1}
+lm(Percent ~ Tx + Time,        data=df) %>% summary()
+```
+
+## Percent Ciliated ~ Treatment + Time Treated + Embryo Size
+
+```{r lm2}
+lm(Percent ~ Tx + Time + Area, data=df) %>% summary()
+```
+
+## Embryo Size ~ Treatment + Time Treated
+
+```{r lm3}
+lm(Area    ~ Tx + Time,        data=df) %>% summary()
+```
+
+# Plots
+
+```{r Plot1}
+df %>% ggplot(aes(x=factor(Time), y=Percent, fill=Tx)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  
+  scale_fill_economist(name="Treatment") +
+  scale_y_continuous(labels = percent) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(), axis.title.y = element_text(angle = 90)) +
+  labs(x="Hours Post-Fertilization (HPF)", y="Percent MCC",
+       title="Percent Embryo Multiciliated vs Time Since Fertilization")
+```
+
+```{r Plot2, warning=FALSE}
+df %>% ggplot(aes(x=Time, y=Area)) + 
+  geom_smooth() + 
+  geom_point(aes(color=Tx, size=Percent, alpha=Percent)) + 
+  
+  scale_color_economist(name="Treatment") +
+  scale_alpha_continuous(name="Percent MCC") +
+  scale_size_continuous(name="Percent MCC") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(), axis.title.y = element_text(angle = 90)) +
+  labs(x="Hours Post-Fertilization (HPF)", y="Embryo Size (mm²)",
+       title="Size of Embryo vs Time Since Fertilization")
+```
+
+```{r Plot3}
+df %>% 
+  ggplot(aes(color=Tx, size=Area, shape=factor(Time))) +
+  geom_point(aes(x=Area, y=Num, alpha=Percent)) +
+  
+  # scale_y_continuous(labels = percent) +
+  scale_color_economist(name="Treatment") +
+  scale_alpha_continuous(name="Percent MCC") +
+  scale_shape_stata(name="HPF") +
+  guides(size=F, alpha=F) + 
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(), axis.title.y = element_text(angle = 90)) +
+  labs(x="Embryo Size (mm²)", y="Percent MCC",
+       title="Percent Embryo Multiciliated vs Size")
+```
+
+
+
+```
+Copyright (C) 2016 Hunter Ratliff
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+```{r Session_info, echo=TRUE, collapse=TRUE}
+devtools::session_info()
+```
